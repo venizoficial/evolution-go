@@ -1,0 +1,27 @@
+name: Validate Evolution Go button fix
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compile-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Install native build dependencies
+        run: sudo apt-get update && sudo apt-get install -y libjpeg-dev libwebp-dev pkg-config
+      - name: Verify Go modules
+        run: go mod download
+      - name: Compile Evolution Go
+        run: CGO_ENABLED=1 go build -o /tmp/evolution-go-test ./cmd/evolution-go
+      - name: Run send-message package tests
+        run: CGO_ENABLED=1 go test ./pkg/sendMessage/...
